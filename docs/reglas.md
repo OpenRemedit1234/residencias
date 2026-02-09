@@ -58,6 +58,21 @@ Este mensaje indica que:
 
 ---
 
+#### Regla #4: Prohibición de Proactividad
+**OBLIGATORIO:** Se prohíbe que el programador sea proactivo. Todas las actuaciones o modificaciones DEBEN ser autorizadas previamente por el cliente. No se deben realizar cambios automáticos sin permiso explícito.
+
+---
+
+#### Regla #5: Versiones Espejo en HTML
+**OBLIGATORIO:** Los archivos técnicos (`documento_tecnico.md`) y de manual de usuario (`manual_usuario.md`) tendrán siempre su versión espejo en formato `.html` para poder ser visionados fácilmente. Cada vez que se actualice el `.md`, se debe actualizar el `.html` correspondiente.
+
+---
+
+#### Regla #6: Registro Persistente de Progresos
+**OBLIGATORIO:** Se debe registrar todo de forma persistente, incluyendo los progresos realizados, decisiones tomadas y cambios en el sistema, para mantener un historial completo del desarrollo.
+
+---
+
 ### 1.2 Reglas de Negocio
 
 [PENDIENTE: El cliente proporcionará las reglas de negocio]

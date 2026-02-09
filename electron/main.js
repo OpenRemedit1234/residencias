@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const electron = require('electron');
+const { app, BrowserWindow, ipcMain } = electron;
+
+console.log('Electron API check:', {
+  hasApp: !!app,
+  appType: typeof app,
+  electronKeys: Object.keys(electron)
+});
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
@@ -71,7 +78,7 @@ function createWindow() {
 }
 
 // Inicializar base de datos
-const db = require('../server/database/connection');
+const { sequelize: db } = require('../server/database/connection');
 db.sync({ alter: true })
   .then(() => {
     console.log('Base de datos SQLite inicializada');
