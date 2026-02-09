@@ -24,6 +24,10 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             defaultValue: 1
         },
+        capacidad: {
+            type: DataTypes.INTEGER,
+            defaultValue: 2
+        },
         metros_cuadrados: {
             type: DataTypes.INTEGER,
             allowNull: true

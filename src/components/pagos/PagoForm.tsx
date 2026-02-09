@@ -45,6 +45,7 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
 
     const [residentes, setResidentes] = useState<Residente[]>([]);
     const [reservas, setReservas] = useState<Reserva[]>([]);
+    const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -66,27 +67,43 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
 
     useEffect(() => {
         if (formData.residente_id) {
+            const token = localStorage.getItem('token');
+
             // Cargar reservas del residente seleccionado
             const fetchReservas = async () => {
                 try {
-                    const token = localStorage.getItem('token');
-                    // Cargamos todas las recientes y filtramos por residente
                     const res = await fetch(`http://localhost:3001/api/reservas?limit=50`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const data = await res.json();
-                    // Filtrar manualmente en cliente si la API no soporta filtro directo por residente_id en query (la implementamos antes con search no id)
-                    // Para ser más precisos, asumimos que el usuario escribirá el concepto manualmente si no hay reserva
                     setReservas(data.filter((r: any) => r.residente_id === Number(formData.residente_id)));
                 } catch (err) {
                     console.error("Error cargando reservas", err);
                 }
             };
+
+            // Verificar pagos pendientes
+            const checkPendingPayments = async () => {
+                try {
+                    const res = await fetch(`http://localhost:3001/api/pagos?residente_id=${formData.residente_id}&estado=pendiente`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    // Si estamos editando un pago que ya es pendiente, no lo contamos como "adicional"
+                    const count = data.filter((p: any) => p.id !== initialData?.id).length;
+                    setPendingPaymentsCount(count);
+                } catch (err) {
+                    console.error("Error verificando pagos pendientes", err);
+                }
+            };
+
             fetchReservas();
+            checkPendingPayments();
         } else {
             setReservas([]);
+            setPendingPaymentsCount(0);
         }
-    }, [formData.residente_id]);
+    }, [formData.residente_id, initialData]);
 
     useEffect(() => {
         if (initialData) {
@@ -141,6 +158,18 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {error && (
                         <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">{error}</div>
+                    )}
+
+                    {pendingPaymentsCount > 0 && (
+                        <div className="p-3 bg-warning-50 border border-warning-200 rounded-md flex items-start gap-3 animate-pulse">
+                            <span className="text-xl">⚠️</span>
+                            <div>
+                                <p className="text-sm font-bold text-warning-800">Pagos acumulados</p>
+                                <p className="text-xs text-warning-700">
+                                    Este residente tiene <strong>{pendingPaymentsCount}</strong> pago(s) pendiente(s) adicional(es).
+                                </p>
+                            </div>
+                        </div>
                     )}
 
                     <div>
@@ -235,17 +264,30 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Estado</label>
-                            <select
-                                name="estado"
-                                value={formData.estado}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            >
-                                <option value="completado">Completado</option>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="cancelado">Cancelado</option>
-                            </select>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Estado del Pago</label>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, estado: 'completado' }))}
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md border transition-colors ${formData.estado === 'completado' ? 'bg-success-50 border-success-500 text-success-700 shadow-sm' : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+                                >
+                                    Completado ✅
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, estado: 'pendiente' }))}
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md border transition-colors ${formData.estado === 'pendiente' ? 'bg-warning-50 border-warning-500 text-warning-700 shadow-sm' : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+                                >
+                                    Pendiente ⏳
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, estado: 'cancelado' }))}
+                                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-md border transition-colors ${formData.estado === 'cancelado' ? 'bg-red-50 border-red-500 text-red-700 shadow-sm' : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+                                >
+                                    Cancelado 🚫
+                                </button>
+                            </div>
                         </div>
                     </div>
 

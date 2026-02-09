@@ -34,19 +34,47 @@ router.get('/general', authMiddleware, async (req, res) => {
             }
         });
 
-        // Pagos Pendientes (Reservas activas con deuda)
-        const reservasActivas = await Reserva.findAll({
-            where: { estado: ['activa', 'pendiente'] },
-            include: [{ model: Pago, as: 'pagos' }]
+        // Cálculo de Deuda Pendiente por Residente (Evita duplicados si el pago no está vinculado a la reserva)
+        const residentes = await Residente.findAll({
+            include: [
+                {
+                    model: Reserva,
+                    as: 'reservas',
+                    where: { estado: ['activa', 'pendiente'] },
+                    required: false
+                },
+                {
+                    model: Pago,
+                    as: 'pagos',
+                    required: false
+                }
+            ]
         });
 
-        let pagosPendientes = 0;
-        reservasActivas.forEach(r => {
-            const pagado = (r.pagos || []).reduce((acc, p) => acc + p.monto, 0);
-            if (pagado < r.precio_total) {
-                pagosPendientes += (r.precio_total - pagado);
+        let totalDeudaCalculada = 0;
+        let sumaPagosPendientesGlobal = 0;
+
+        // 1. Sumamos todos los pagos marcados como 'pendiente' (estén o no vinculados a una reserva)
+        const pagosPendientesRaw = await Pago.findAll({ where: { estado: 'pendiente' } });
+        sumaPagosPendientesGlobal = pagosPendientesRaw.reduce((acc, p) => acc + Number(p.monto), 0);
+
+        // 2. Sumamos la deuda de reservas que aún no ha sido registrada ni como pago pendiente ni completado
+        let deudaReservasNoRegistrada = 0;
+        residentes.forEach(res => {
+            const totalReservas = (res.reservas || []).reduce((acc, r) => acc + Number(r.precio_total), 0);
+            const totalPagosRegistrados = (res.pagos || []).reduce((acc, p) => {
+                if (p.estado === 'cancelado') return acc;
+                return acc + Number(p.monto);
+            }, 0);
+
+            // Si el residente tiene reservas por valor de 500€ pero solo hay pagos (vencidos o no) por 100€,
+            // faltan 400€ por "facturar" o registrar.
+            if (totalReservas > totalPagosRegistrados) {
+                deudaReservasNoRegistrada += (totalReservas - totalPagosRegistrados);
             }
         });
+
+        totalDeudaCalculada = sumaPagosPendientesGlobal + deudaReservasNoRegistrada;
 
         // Próximas reservas (próximos 7 días)
         const next7Days = new Date();
@@ -68,7 +96,7 @@ router.get('/general', authMiddleware, async (req, res) => {
             residentes: totalResidentes,
             ocupacion: ocupacionTotal,
             ingresos_mes: ingresosMes || 0,
-            pagos_pendientes: Math.round(pagosPendientes * 100) / 100,
+            pagos_pendientes: Math.round(totalDeudaCalculada * 100) / 100,
             proximas_llegadas: proximasReservas
         });
     } catch (error) {

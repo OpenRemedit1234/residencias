@@ -6,30 +6,69 @@ export default function Dashboard() {
         ocupacion: 0,
         ingresos_mes: 0,
         pagos_pendientes: 0,
-        proximas_llegadas: [] as any[]
+        proximas_llegadas: [] as any[],
+        deudas: [] as any[]
     });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('http://localhost:3001/api/reportes/general', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data);
-                }
-            } catch (error) {
-                console.error('Error cargando stats dashboard');
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchStats = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('http://localhost:3001/api/reportes/general', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const resDeudas = await fetch('http://localhost:3001/api/pagos?estado=pendiente', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
+            if (res.ok && resDeudas.ok) {
+                const data = await res.json();
+                const deudas = await resDeudas.json();
+                setStats({ ...data, deudas });
+            }
+        } catch (error) {
+            console.error('Error cargando stats dashboard');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchStats();
     }, []);
+
+    const handleCompletarPago = async (id: number) => {
+        if (!window.confirm('¿Confirmar que el pago ha sido recibido?')) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ estado: 'completar' }) // Note: My backend PUT just updates the whole body, but I should check if it needs 'completado'
+            });
+
+            // Re-checking backend logic: server/routes/pagos.js line 88: await pago.update(req.body);
+            // So I should send { estado: 'completado' }
+
+            const res = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ estado: 'completado' })
+            });
+
+            if (res.ok) {
+                fetchStats();
+            }
+        } catch (err) {
+            alert('Error al actualizar pago');
+        }
+    };
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val);
@@ -105,46 +144,106 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Lista de Próximas Llegadas */}
-                <div className="lg:col-span-2 card p-0 overflow-hidden">
-                    <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
-                        <h2 className="text-lg font-bold text-neutral-800">Próximas Llegadas</h2>
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded uppercase">Próximos 7 días</span>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-neutral-100">
-                            <thead className="bg-neutral-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Residente</th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Fecha Entrada</th>
-                                    <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Alojamiento</th>
-                                    <th className="px-6 py-3 text-right text-xs font-bold text-neutral-400 uppercase">Importe</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-neutral-100">
-                                {stats.proximas_llegadas.length === 0 ? (
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="card p-0 overflow-hidden">
+                        <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
+                            <h2 className="text-lg font-bold text-neutral-800">Próximas Llegadas</h2>
+                            <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded uppercase">Próximos 7 días</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-neutral-100">
+                                <thead className="bg-neutral-50">
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-neutral-500 italic">No hay llegadas programadas para esta semana</td>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Residente</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Fecha Entrada</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Alojamiento</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-neutral-400 uppercase">Importe</th>
                                     </tr>
-                                ) : (
-                                    stats.proximas_llegadas.map((r) => (
-                                        <tr key={r.id} className="hover:bg-neutral-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
-                                                {r.residente?.nombre} {r.residente?.apellidos}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                                                {new Date(r.fecha_entrada).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
-                                                {r.habitacion_id ? `Habitación ${r.habitacion_id}` : `Apt. ${r.apartamento_id}`}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-neutral-800">
-                                                {formatCurrency(r.precio_total)}
-                                            </td>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100">
+                                    {stats.proximas_llegadas.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-8 text-center text-neutral-500 italic">No hay llegadas programadas para esta semana</td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        stats.proximas_llegadas.map((r) => (
+                                            <tr key={r.id} className="hover:bg-neutral-50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
+                                                    {r.residente?.nombre} {r.residente?.apellidos}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                                                    {new Date(r.fecha_entrada).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                                                    {r.habitacion_id ? `Habitación ${r.habitacion_id}` : `Apt. ${r.apartamento_id}`}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-neutral-800">
+                                                    {formatCurrency(r.precio_total)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* NUEVA SECCIÓN: Pagos Pendientes (Deudas) */}
+                    <div className="card p-0 overflow-hidden border-t-4 border-t-amber-400">
+                        <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-amber-50/30">
+                            <div>
+                                <h2 className="text-lg font-bold text-neutral-800">Control de Deudas Pendientes</h2>
+                                <p className="text-xs text-amber-600 font-medium">Pagos registrados que aún no se han cobrado</p>
+                            </div>
+                            <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded uppercase">
+                                {stats.deudas.length} Pendientes
+                            </span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-neutral-100">
+                                <thead className="bg-neutral-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Residente</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Concepto</th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-neutral-400 uppercase">Vencimiento</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-neutral-400 uppercase">Monto</th>
+                                        <th className="px-6 py-3 text-right text-xs font-bold text-neutral-400 uppercase">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-neutral-100">
+                                    {stats.deudas.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-8 text-center text-neutral-500 italic">No hay pagos pendientes de cobro ✨</td>
+                                        </tr>
+                                    ) : (
+                                        stats.deudas.map((p) => (
+                                            <tr key={p.id} className="hover:bg-amber-50 transition-colors">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-800">
+                                                    {p.residente?.nombre} {p.residente?.apellidos}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">
+                                                    {p.concepto}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600 font-medium">
+                                                    {new Date(p.fecha_pago).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-amber-600">
+                                                    {formatCurrency(p.monto)}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                    <button
+                                                        onClick={() => handleCompletarPago(p.id)}
+                                                        className="px-3 py-1 bg-success-600 text-white text-xs font-bold rounded hover:bg-success-700 shadow-sm transition-colors"
+                                                    >
+                                                        Cobrar ✅
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 

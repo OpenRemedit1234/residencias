@@ -28,9 +28,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            try {
+                setToken(storedToken);
+                setUser(JSON.parse(storedUser));
+                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            } catch (err) {
+                console.error("Error parsing stored user:", err);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            }
         }
     }, []);
 

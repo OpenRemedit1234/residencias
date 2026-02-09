@@ -24,6 +24,7 @@ interface Alojamiento {
     numero: string;
     nombre: string;
     tipo?: string; // Solo habitaciones
+    capacidad: number; // Añadido para validación
     precio_noche?: number; // Ambos (puede ser undefined si es mensual)
     precio_mes?: number; // Solo apartamentos
     estado: string;
@@ -137,13 +138,18 @@ export default function ReservaForm({ initialData, onSubmit, onCancel }: Reserva
             setLoading(false);
             return;
         }
-        if (tipoAlojamiento === 'habitacion' && !formData.habitacion_id) {
-            setError("Debe seleccionar una habitación");
+
+        const alojamientoId = tipoAlojamiento === 'habitacion' ? formData.habitacion_id : formData.apartamento_id;
+        if (!alojamientoId) {
+            setError(`Debe seleccionar ${tipoAlojamiento === 'habitacion' ? 'una habitación' : 'un apartamento'}`);
             setLoading(false);
             return;
         }
-        if (tipoAlojamiento === 'apartamento' && !formData.apartamento_id) {
-            setError("Debe seleccionar un apartamento");
+
+        // Validación de capacidad
+        const alojamiento = alojamientos.find(a => a.id === Number(alojamientoId));
+        if (alojamiento && formData.numero_personas > alojamiento.capacidad) {
+            setError(`La capacidad máxima de este alojamiento es de ${alojamiento.capacidad} personas`);
             setLoading(false);
             return;
         }
@@ -233,7 +239,7 @@ export default function ReservaForm({ initialData, onSubmit, onCancel }: Reserva
                             <option value="">Seleccione...</option>
                             {alojamientos.map(a => (
                                 <option key={a.id} value={a.id}>
-                                    {a.numero} - {a.nombre} ({a.precio_noche ? `${a.precio_noche}€/n` : `${a.precio_mes}€/m`})
+                                    {a.numero} - {a.nombre} (Cap: {a.capacidad} | {a.precio_noche ? `${a.precio_noche}€/n` : `${a.precio_mes}€/m`})
                                 </option>
                             ))}
                         </select>

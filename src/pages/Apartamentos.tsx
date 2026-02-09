@@ -7,6 +7,7 @@ interface Apartamento {
     nombre: string;
     habitaciones: number;
     banos: number;
+    capacidad: number; // Añadido
     metros_cuadrados: number;
     precio_mes: number;
     precio_noche: number;
@@ -153,7 +154,7 @@ export default function Apartamentos() {
                             </div>
 
                             <div className="p-5 flex-1 flex flex-col gap-4">
-                                <div className="grid grid-cols-3 gap-2 text-center text-sm border-b pb-3">
+                                <div className="grid grid-cols-4 gap-2 text-center text-sm border-b pb-3">
                                     <div className="bg-neutral-50 p-2 rounded">
                                         <span className="block font-bold text-lg">{apartamento.habitaciones}</span>
                                         <span className="text-neutral-500 text-xs">Habit.</span>
@@ -161,6 +162,10 @@ export default function Apartamentos() {
                                     <div className="bg-neutral-50 p-2 rounded">
                                         <span className="block font-bold text-lg">{apartamento.banos}</span>
                                         <span className="text-neutral-500 text-xs">Baños</span>
+                                    </div>
+                                    <div className="bg-neutral-50 p-2 rounded">
+                                        <span className="block font-bold text-lg">{apartamento.capacidad}</span>
+                                        <span className="text-neutral-500 text-xs">Cap.</span>
                                     </div>
                                     <div className="bg-neutral-50 p-2 rounded">
                                         <span className="block font-bold text-lg">{apartamento.metros_cuadrados}</span>

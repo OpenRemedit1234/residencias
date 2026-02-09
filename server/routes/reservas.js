@@ -123,6 +123,20 @@ router.post('/', authMiddleware, async (req, res) => {
             return res.status(409).json({ message: 'El alojamiento no está disponible en las fechas seleccionadas' });
         }
 
+        // Verificar capacidad máxima
+        let capacidadMaxima = 0;
+        if (habitacion_id) {
+            const h = await Habitacion.findByPk(habitacion_id);
+            capacidadMaxima = h ? h.capacidad : 0;
+        } else if (apartamento_id) {
+            const a = await Apartamento.findByPk(apartamento_id);
+            capacidadMaxima = a ? a.capacidad : 0;
+        }
+
+        if (numero_personas > capacidadMaxima) {
+            return res.status(400).json({ message: `La capacidad máxima de este alojamiento es de ${capacidadMaxima} personas` });
+        }
+
         const nuevaReserva = await Reserva.create({
             residente_id,
             habitacion_id,
@@ -150,10 +164,30 @@ router.put('/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Reserva no encontrada' });
         }
 
-        const { fecha_entrada, fecha_salida, habitacion_id, apartamento_id } = req.body;
+        const { fecha_entrada, fecha_salida, habitacion_id, apartamento_id, numero_personas } = req.body;
+
+        // Si cambia el número de personas, verificar capacidad
+        if (numero_personas !== undefined || habitacion_id !== undefined || apartamento_id !== undefined) {
+            const nPersonas = numero_personas !== undefined ? numero_personas : reserva.numero_personas;
+            const hId = habitacion_id !== undefined ? habitacion_id : reserva.habitacion_id;
+            const aId = apartamento_id !== undefined ? apartamento_id : reserva.apartamento_id;
+
+            let capacidadMax = 0;
+            if (hId) {
+                const h = await Habitacion.findByPk(hId);
+                capacidadMax = h ? h.capacidad : 0;
+            } else if (aId) {
+                const a = await Apartamento.findByPk(aId);
+                capacidadMax = a ? a.capacidad : 0;
+            }
+
+            if (nPersonas > capacidadMax) {
+                return res.status(400).json({ message: `La capacidad máxima de este alojamiento es de ${capacidadMax} personas` });
+            }
+        }
 
         // Si cambian fechas o alojamiento, verificar disponibilidad
-        if (fecha_entrada || fecha_salida || habitacion_id || apartamento_id) {
+        if (fecha_entrada || fecha_salida || habitacion_id !== undefined || apartamento_id !== undefined) {
             const nuevaEntrada = fecha_entrada || reserva.fecha_entrada;
             const nuevaSalida = fecha_salida || reserva.fecha_salida;
             const nuevoHabId = habitacion_id !== undefined ? habitacion_id : reserva.habitacion_id;

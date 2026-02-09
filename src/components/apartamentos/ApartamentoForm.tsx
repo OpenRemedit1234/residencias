@@ -6,6 +6,7 @@ interface Apartamento {
     nombre: string;
     habitaciones: number;
     banos: number;
+    capacidad: number; // Añadido
     metros_cuadrados: number;
     precio_mes: number;
     precio_noche: number;
@@ -26,6 +27,7 @@ export default function ApartamentoForm({ initialData, onSubmit, onCancel }: Apa
         nombre: '',
         habitaciones: 1,
         banos: 1,
+        capacidad: 2, // Default
         metros_cuadrados: 0,
         precio_mes: 0,
         precio_noche: 0,
@@ -99,9 +101,9 @@ export default function ApartamentoForm({ initialData, onSubmit, onCancel }: Apa
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-neutral-700 mb-1">Habitaciones</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Habit.</label>
                             <input
                                 type="number"
                                 name="habitaciones"
@@ -119,6 +121,18 @@ export default function ApartamentoForm({ initialData, onSubmit, onCancel }: Apa
                                 value={formData.banos}
                                 onChange={handleChange}
                                 min="0"
+                                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">Capacidad *</label>
+                            <input
+                                type="number"
+                                name="capacidad"
+                                value={formData.capacidad}
+                                onChange={handleChange}
+                                min="1"
+                                required
                                 className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                             />
                         </div>

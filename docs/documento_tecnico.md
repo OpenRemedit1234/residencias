@@ -302,6 +302,19 @@ Personal administrativo con acceso al sistema.
 | **Staging** | Pruebas pre-producción | `[PENDIENTE]` |
 | **Producción** | Sistema en vivo | `[PENDIENTE]` |
 
+### 6.2 Control de Versiones (GitHub)
+
+El proyecto está gestionado mediante Git y alojado en GitHub.
+
+- **Repositorio:** `https://github.com/OpenRemedit1234/residencias.git`
+- **Rama Principal:** `main`
+
+**Flujo de actualización:**
+1. Realizar cambios localmente.
+2. `git add .`
+3. `git commit -m "Descripción del cambio"`
+4. `git push origin main`
+
 ### 6.2 Requisitos del Servidor
 
 **Servidor de Aplicación:**
@@ -388,6 +401,19 @@ cp .env.example .env
 # Iniciar servidor de desarrollo
 npm run dev
 ```
+
+### 7.4 Arranque Rápido (Windows)
+
+Para facilitar el uso diario sin necesidad de abrir terminales manualmente, se ha incluido un script de arranque directo:
+
+1. Localizar el archivo `ARRANCAR_SISTEMA.bat` en la raíz del proyecto.
+2. Hacer doble clic sobre el archivo.
+3. El script iniciará:
+   - El servidor de base de datos y API (`server/index.js`).
+   - El entorno de interfaz web (`vite`).
+   - Una ventana del navegador en `http://localhost:5173`.
+
+**Nota:** La ventana de terminal que se abre debe permanecer abierta mientras se use el sistema.
 
 ### 7.4 Variables de Entorno
 

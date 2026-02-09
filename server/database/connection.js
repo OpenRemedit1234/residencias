@@ -36,6 +36,7 @@ const Apartamento = require('./models/Apartamento')(sequelize);
 const Reserva = require('./models/Reserva')(sequelize);
 const Pago = require('./models/Pago')(sequelize);
 const Festivo = require('./models/Festivo')(sequelize);
+const Configuracion = require('./models/Configuracion')(sequelize);
 const ConfiguracionEmpresa = require('./models/ConfiguracionEmpresa')(sequelize);
 const ConfiguracionSistema = require('./models/ConfiguracionSistema')(sequelize);
 const Configuracion = require('./models/Configuracion')(sequelize);
@@ -67,6 +68,7 @@ module.exports = {
     Reserva,
     Pago,
     Festivo,
+    Configuracion,
     ConfiguracionEmpresa,
     ConfiguracionSistema,
     Configuracion,

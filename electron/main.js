@@ -78,10 +78,26 @@ function createWindow() {
 }
 
 // Inicializar base de datos
-const { sequelize: db } = require('../server/database/connection');
-db.sync({ alter: true })
-  .then(() => {
+const db = require('../server/database/connection');
+const bcrypt = require('bcryptjs');
+
+db.sequelize.sync({ alter: true })
+  .then(async () => {
     console.log('Base de datos SQLite inicializada');
+
+    // Crear usuario admin por defecto si no hay usuarios
+    const count = await db.Usuario.count();
+    if (count === 0) {
+      const passwordHash = await bcrypt.hash('admin123', 10);
+      await db.Usuario.create({
+        username: 'admin',
+        password_hash: passwordHash,
+        email: 'admin@residencia.com',
+        rol: 'administrador',
+        activo: true
+      });
+      console.log('Usuario administrador por defecto creado: admin / admin123');
+    }
   })
   .catch(err => {
     console.error('Error al inicializar base de datos:', err);
