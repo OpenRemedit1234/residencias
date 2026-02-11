@@ -45,7 +45,7 @@ export default function Calendario() {
             const startStr = viewType === 'anio' ? `${year}-01-01` : `${year}-${(month + 1).toString().padStart(2, '0')}-01`;
             const endStr = viewType === 'anio' ? `${year}-12-31` : `${year}-${(month + 1).toString().padStart(2, '0')}-${getDaysInMonth(year, month)}`;
 
-            const res = await fetch(`http://localhost:3001/api/reservas?fecha_inicio=${startStr}&fecha_fin=${endStr}`, {
+            const res = await fetch(`http://127.0.0.1:3001/api/reservas?fecha_inicio=${startStr}&fecha_fin=${endStr}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -58,7 +58,7 @@ export default function Calendario() {
     const fetchFestivos = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:3001/api/festivos?anio=${year}`, {
+            const res = await fetch(`http://127.0.0.1:3001/api/festivos?anio=${year}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -117,7 +117,7 @@ export default function Calendario() {
             if (window.confirm(`¿Eliminar festivo "${festivo.nombre}"?`)) {
                 try {
                     const token = localStorage.getItem('token');
-                    await fetch(`http://localhost:3001/api/festivos/${festivo.id}`, {
+                    await fetch(`http://127.0.0.1:3001/api/festivos/${festivo.id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
@@ -131,7 +131,7 @@ export default function Calendario() {
             if (nombre) {
                 try {
                     const token = localStorage.getItem('token');
-                    await fetch(`http://localhost:3001/api/festivos`, {
+                    await fetch(`http://127.0.0.1:3001/api/festivos`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export default function Calendario() {
         const prevYear = month === 0 ? year - 1 : year;
         const daysInPrev = getDaysInMonth(prevYear, prevMonth);
         for (let i = firstDay - 1; i >= 0; i--) {
-            days.push(<div key={`prev-${i}`} className="bg-neutral-50/50 border border-neutral-100 min-h-[100px] p-2 opacity-30 text-xs">{daysInPrev - i}</div>);
+            days.push(<div key={`prev-${i}`} className="bg-neutral-50/50 border border-neutral-100 min-h-[120px] p-2 opacity-30 text-xs">{daysInPrev - i}</div>);
         }
 
         // Días actuales
@@ -176,22 +176,22 @@ export default function Calendario() {
                 <div
                     key={d}
                     onClick={() => handleDayClick(year, month, d)}
-                    className={`border border-neutral-200 min-h-[100px] p-1.5 relative hover:bg-neutral-50 cursor-pointer transition-all
+                    className={`border border-neutral-200 min-h-[120px] p-1.5 relative hover:bg-neutral-50 cursor-pointer transition-all
                         ${festivo ? 'bg-red-50/40' : isWeekend ? 'bg-neutral-50/40' : 'bg-white'}
                         ${isToday ? 'ring-2 ring-primary-500 z-10' : ''}
                     `}
                 >
                     <div className="flex justify-between items-start mb-1">
-                        <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full
+                        <span className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full
                             ${isToday ? 'bg-primary-600 text-white' : festivo ? 'text-red-600 bg-red-100' : 'text-neutral-500'}
                         `}>
                             {d}
                         </span>
-                        {festivo && <span className="text-[9px] bg-red-100 text-red-700 px-1 rounded truncate max-w-[50px]">{festivo.nombre}</span>}
+                        {festivo && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded truncate max-w-[70px] font-bold">{festivo.nombre}</span>}
                     </div>
-                    <div className="space-y-0.5 max-h-[70px] overflow-y-auto custom-scrollbar">
+                    <div className="space-y-1 max-h-[100px] overflow-y-auto custom-scrollbar">
                         {dayReservas.map(r => (
-                            <div key={r.id} className={`text-[9px] px-1 py-0.5 rounded border-l-2 truncate shadow-sm
+                            <div key={r.id} className={`text-[11px] font-bold px-1.5 py-1 rounded border-l-2 truncate shadow-sm
                                 ${r.estado === 'activa' ? 'bg-emerald-50 text-emerald-800 border-emerald-500' : 'bg-amber-50 text-amber-800 border-amber-500'}
                             `}>
                                 {r.habitacion ? `H${r.habitacion.numero}` : `A${r.apartamento?.numero}`} - {r.residente?.nombre.split(' ')[0]}
@@ -206,7 +206,7 @@ export default function Calendario() {
         const totalSlots = 42;
         const nextSlots = totalSlots - days.length;
         for (let i = 1; i <= nextSlots; i++) {
-            days.push(<div key={`next-${i}`} className="bg-neutral-50/50 border border-neutral-100 min-h-[100px] p-2 opacity-30 text-xs">{i}</div>);
+            days.push(<div key={`next-${i}`} className="bg-neutral-50/50 border border-neutral-100 min-h-[120px] p-2 opacity-30 text-xs">{i}</div>);
         }
 
         return (
@@ -250,7 +250,7 @@ export default function Calendario() {
                                 <div
                                     key={d}
                                     onClick={() => handleDayClick(year, mIdx, d)}
-                                    className={`h-7 w-full flex items-center justify-center text-[10px] rounded-md cursor-pointer transition-all border
+                                    className={`h-8 w-full flex items-center justify-center text-xs rounded-md cursor-pointer transition-all border
                                         ${count > 0 ? 'bg-primary-100 border-primary-200 text-primary-900 font-bold' : 'border-transparent text-neutral-500 hover:bg-neutral-100'}
                                         ${hasFestivo ? 'bg-red-50 !border-red-200 !text-red-700' : ''}
                                         ${isToday ? 'ring-2 ring-primary-500 z-10 scale-110 !font-black shadow-sm' : ''}

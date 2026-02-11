@@ -22,7 +22,7 @@ export default function AdminUsuarios() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/auth/users', {
+            const res = await fetch('http://127.0.0.1:3001/api/auth/users', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -44,7 +44,7 @@ export default function AdminUsuarios() {
         if (!window.confirm('¿Eliminar usuario?')) return;
         try {
             const token = localStorage.getItem('token');
-            await fetch(`http://localhost:3001/api/auth/users/${id}`, {
+            await fetch(`http://127.0.0.1:3001/api/auth/users/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -58,7 +58,7 @@ export default function AdminUsuarios() {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/auth/register', {
+            const res = await fetch('http://127.0.0.1:3001/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -25,7 +25,7 @@ export default function Habitaciones() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/habitaciones`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/habitaciones`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Error al cargar habitaciones');
@@ -45,7 +45,7 @@ export default function Habitaciones() {
     const handleEstadoChange = async (id: number, nuevoEstado: string) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/habitaciones/${id}/estado`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/habitaciones/${id}/estado`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,8 +63,8 @@ export default function Habitaciones() {
     const handleSubmit = async (data: any) => {
         const token = localStorage.getItem('token');
         const url = editingHabitacion
-            ? `http://localhost:3001/api/habitaciones/${editingHabitacion.id}`
-            : 'http://localhost:3001/api/habitaciones';
+            ? `http://127.0.0.1:3001/api/habitaciones/${editingHabitacion.id}`
+            : 'http://127.0.0.1:3001/api/habitaciones';
         const method = editingHabitacion ? 'PUT' : 'POST';
 
         const response = await fetch(url, {

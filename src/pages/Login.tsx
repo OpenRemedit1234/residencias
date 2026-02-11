@@ -20,7 +20,9 @@ export default function Login() {
             await login(username, password);
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Error al iniciar sesión');
+            console.error('Login error:', err);
+            const msg = err.response?.data?.message || err.message || 'Error desconocido';
+            setError(msg);
         } finally {
             setLoading(false);
         }

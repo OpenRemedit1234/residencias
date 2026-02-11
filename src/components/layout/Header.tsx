@@ -14,7 +14,7 @@ export default function Header() {
 
             // Intentar realizar backup antes de salir
             if (token) {
-                await fetch('http://localhost:3001/api/backups', {
+                await fetch('http://127.0.0.1:3001/api/backups', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

@@ -29,7 +29,7 @@ export default function Reservas() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/reservas?estado=${filterEstado}`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/reservas?estado=${filterEstado}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Error al cargar reservas');
@@ -50,7 +50,7 @@ export default function Reservas() {
         if (!window.confirm(`¿Cambiar estado a ${nuevoEstado}?`)) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/reservas/${id}/estado`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/reservas/${id}/estado`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export default function Reservas() {
         if (!window.confirm('¿Eliminar reserva permanentemente?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/reservas/${id}`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/reservas/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -83,8 +83,8 @@ export default function Reservas() {
     const handleSubmit = async (data: any) => {
         const token = localStorage.getItem('token');
         const url = editingReserva
-            ? `http://localhost:3001/api/reservas/${editingReserva.id}`
-            : 'http://localhost:3001/api/reservas';
+            ? `http://127.0.0.1:3001/api/reservas/${editingReserva.id}`
+            : 'http://127.0.0.1:3001/api/reservas';
         const method = editingReserva ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -199,7 +199,7 @@ export default function Reservas() {
                                                 <button
                                                     onClick={() => {
                                                         const token = localStorage.getItem('token');
-                                                        window.open(`http://localhost:3001/api/reservas/${reserva.id}/proforma?token=${token}`, '_blank');
+                                                        window.open(`http://127.0.0.1:3001/api/reservas/${reserva.id}/proforma?token=${token}`, '_blank');
                                                     }}
                                                     className="text-neutral-500 hover:text-blue-600"
                                                     title="Descargar Proforma"

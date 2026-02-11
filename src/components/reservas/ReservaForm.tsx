@@ -63,13 +63,13 @@ export default function ReservaForm({ initialData, onSubmit, onCancel }: Reserva
                 const headers = { 'Authorization': `Bearer ${token}` };
 
                 // Cargar residentes (limitando a 200 por rendimiento inicial, idealmente usar búsqueda dinámica)
-                const resResidentes = await fetch('http://localhost:3001/api/residentes?limit=200', { headers });
+                const resResidentes = await fetch('http://127.0.0.1:3001/api/residentes?limit=200', { headers });
                 const dataResidentes = await resResidentes.json();
                 setResidentes(dataResidentes.data || []);
 
                 // Cargar alojamientos según selección
                 const endpoint = tipoAlojamiento === 'habitacion' ? 'habitaciones' : 'apartamentos';
-                const resAlojamientos = await fetch(`http://localhost:3001/api/${endpoint}?estado=disponible`, { headers });
+                const resAlojamientos = await fetch(`http://127.0.0.1:3001/api/${endpoint}?estado=disponible`, { headers });
                 const dataAlojamientos = await resAlojamientos.json();
                 setAlojamientos(dataAlojamientos);
 

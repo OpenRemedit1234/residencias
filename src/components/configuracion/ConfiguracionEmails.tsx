@@ -19,7 +19,7 @@ export default function ConfiguracionEmails() {
     const fetchConfig = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/configuracion', {
+            const res = await fetch('http://127.0.0.1:3001/api/configuracion', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -53,7 +53,7 @@ export default function ConfiguracionEmails() {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/configuracion', {
+            const res = await fetch('http://127.0.0.1:3001/api/configuracion', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -17,7 +17,7 @@ export default function AdminBackups() {
     const fetchBackups = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/backups', {
+            const res = await fetch('http://127.0.0.1:3001/api/backups', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -33,7 +33,7 @@ export default function AdminBackups() {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/backups', {
+            const res = await fetch('http://127.0.0.1:3001/api/backups', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -55,7 +55,7 @@ export default function AdminBackups() {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:3001/api/backups/restore/${filename}`, {
+            const res = await fetch(`http://127.0.0.1:3001/api/backups/restore/${filename}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -71,7 +71,7 @@ export default function AdminBackups() {
 
     const handleDownload = (filename: string) => {
         const token = localStorage.getItem('token');
-        window.open(`http://localhost:3001/api/backups/download/${filename}?token=${token}`, '_blank');
+        window.open(`http://127.0.0.1:3001/api/backups/download/${filename}?token=${token}`, '_blank');
     };
 
     return (

@@ -23,7 +23,7 @@ const Residentes: React.FC = () => {
         try {
             setLoading(true);
             const response = await axios.get<ApiResponse<Residente>>(
-                `http://localhost:3001/api/residentes?page=${page}&limit=10&search=${search}`,
+                `http://127.0.0.1:3001/api/residentes?page=${page}&limit=10&search=${search}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setResidentes(response.data.data);
@@ -51,7 +51,7 @@ const Residentes: React.FC = () => {
         if (!window.confirm('¿Estás seguro de eliminar este residente?')) return;
 
         try {
-            await axios.delete(`http://localhost:3001/api/residentes/${id}`, {
+            await axios.delete(`http://127.0.0.1:3001/api/residentes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchResidentes();
@@ -76,12 +76,12 @@ const Residentes: React.FC = () => {
             setIsSubmitting(true);
             if (currentResidente?.id) {
                 // Update
-                await axios.put(`http://localhost:3001/api/residentes/${currentResidente.id}`, data, {
+                await axios.put(`http://127.0.0.1:3001/api/residentes/${currentResidente.id}`, data, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
                 // Create
-                await axios.post('http://localhost:3001/api/residentes', data, {
+                await axios.post('http://127.0.0.1:3001/api/residentes', data, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }

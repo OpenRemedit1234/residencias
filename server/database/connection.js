@@ -39,7 +39,6 @@ const Festivo = require('./models/Festivo')(sequelize);
 const Configuracion = require('./models/Configuracion')(sequelize);
 const ConfiguracionEmpresa = require('./models/ConfiguracionEmpresa')(sequelize);
 const ConfiguracionSistema = require('./models/ConfiguracionSistema')(sequelize);
-const Configuracion = require('./models/Configuracion')(sequelize);
 const Backup = require('./models/Backup')(sequelize);
 
 // Definir relaciones
@@ -71,6 +70,5 @@ module.exports = {
     Configuracion,
     ConfiguracionEmpresa,
     ConfiguracionSistema,
-    Configuracion,
     Backup
 };

@@ -53,7 +53,7 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
         const fetchResidentes = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch('http://localhost:3001/api/residentes?limit=100', {
+                const res = await fetch('http://127.0.0.1:3001/api/residentes?limit=100', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -72,7 +72,7 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
             // Cargar reservas del residente seleccionado
             const fetchReservas = async () => {
                 try {
-                    const res = await fetch(`http://localhost:3001/api/reservas?limit=50`, {
+                    const res = await fetch(`http://127.0.0.1:3001/api/reservas?limit=50`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const data = await res.json();
@@ -85,7 +85,7 @@ export default function PagoForm({ initialData, onSubmit, onCancel }: PagoFormPr
             // Verificar pagos pendientes
             const checkPendingPayments = async () => {
                 try {
-                    const res = await fetch(`http://localhost:3001/api/pagos?residente_id=${formData.residente_id}&estado=pendiente`, {
+                    const res = await fetch(`http://127.0.0.1:3001/api/pagos?residente_id=${formData.residente_id}&estado=pendiente`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     const data = await res.json();

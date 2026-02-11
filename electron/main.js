@@ -7,6 +7,22 @@ console.log('Electron API check:', {
   electronKeys: Object.keys(electron)
 });
 const path = require('path');
+const fs = require('fs');
+const logFile = path.join(__dirname, '../electron_logs.log');
+const logStream = fs.createWriteStream(logFile, { flags: 'a' });
+
+// Redirigir consola a archivo
+console.log = (...args) => {
+  const msg = `[${new Date().toISOString()}] LOG: ${args.join(' ')}\n`;
+  logStream.write(msg);
+  process.stdout.write(msg);
+};
+console.error = (...args) => {
+  const msg = `[${new Date().toISOString()}] ERROR: ${args.join(' ')}\n`;
+  logStream.write(msg);
+  process.stderr.write(msg);
+};
+
 const express = require('express');
 const cors = require('cors');
 
@@ -85,21 +101,31 @@ db.sequelize.sync({ alter: true })
   .then(async () => {
     console.log('Base de datos SQLite inicializada');
 
-    // Crear usuario admin por defecto si no hay usuarios
-    const count = await db.Usuario.count();
-    if (count === 0) {
-      const passwordHash = await bcrypt.hash('admin123', 10);
-      await db.Usuario.create({
-        username: 'admin',
-        password_hash: passwordHash,
+    // Asegurar usuario administrador
+    const [admin, created] = await db.Usuario.findOrCreate({
+      where: { username: 'admin' },
+      defaults: {
+        password_hash: await bcrypt.hash('admin123', 10),
         email: 'admin@residencia.com',
         rol: 'administrador',
         activo: true
+      }
+    });
+
+    if (!created) {
+      await admin.update({
+        password_hash: await bcrypt.hash('admin123', 10),
+        activo: true,
+        rol: 'administrador'
       });
-      console.log('Usuario administrador por defecto creado: admin / admin123');
+      console.log('Usuario administrador actualizado: admin / admin123');
+    } else {
+      console.log('Usuario administrador creado: admin / admin123');
     }
   })
   .catch(err => {
+    const fs = require('fs');
+    fs.appendFileSync('server_error.log', '\nError main.js: ' + err.stack);
     console.error('Error al inicializar base de datos:', err);
   });
 

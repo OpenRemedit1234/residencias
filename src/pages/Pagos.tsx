@@ -26,7 +26,7 @@ export default function Pagos() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/pagos?estado=${filterEstado}`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/pagos?estado=${filterEstado}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Error al cargar pagos');
@@ -47,7 +47,7 @@ export default function Pagos() {
         if (!window.confirm('¿Eliminar registro de pago?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/pagos/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -61,7 +61,7 @@ export default function Pagos() {
     const handleEstadoChange = async (id: number, nuevoEstado: string) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/pagos/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,8 +79,8 @@ export default function Pagos() {
     const handleSubmit = async (data: any) => {
         const token = localStorage.getItem('token');
         const url = editingPago
-            ? `http://localhost:3001/api/pagos/${editingPago.id}`
-            : 'http://localhost:3001/api/pagos';
+            ? `http://127.0.0.1:3001/api/pagos/${editingPago.id}`
+            : 'http://127.0.0.1:3001/api/pagos';
         const method = editingPago ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
@@ -199,7 +199,7 @@ export default function Pagos() {
                                                     <button
                                                         onClick={() => {
                                                             const token = localStorage.getItem('token');
-                                                            window.open(`http://localhost:3001/api/pagos/${pago.id}/pdf?token=${token}`, '_blank');
+                                                            window.open(`http://127.0.0.1:3001/api/pagos/${pago.id}/pdf?token=${token}`, '_blank');
                                                         }}
                                                         className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-white rounded-md transition-all shadow-sm hover:shadow"
                                                         title="Descargar PDF"
@@ -211,7 +211,7 @@ export default function Pagos() {
                                                             if (!window.confirm('¿Enviar recibo por email al residente?')) return;
                                                             try {
                                                                 const token = localStorage.getItem('token');
-                                                                const res = await fetch(`http://localhost:3001/api/pagos/${pago.id}/email`, {
+                                                                const res = await fetch(`http://127.0.0.1:3001/api/pagos/${pago.id}/email`, {
                                                                     method: 'POST',
                                                                     headers: { 'Authorization': `Bearer ${token}` }
                                                                 });

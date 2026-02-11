@@ -9,7 +9,7 @@ export default function ReporteOcupacion() {
             setLoading(true);
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch('http://localhost:3001/api/reportes/ocupacion', {
+                const res = await fetch('http://127.0.0.1:3001/api/reportes/ocupacion', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const jsonData = await res.json();

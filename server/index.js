@@ -40,18 +40,26 @@ db.sequelize.sync()
     .then(async () => {
         console.log('Base de datos SQLite sincronizada');
 
-        // Crear usuario admin por defecto si no hay usuarios
-        const count = await db.Usuario.count();
-        if (count === 0) {
-            const passwordHash = await bcrypt.hash('admin123', 10);
-            await db.Usuario.create({
-                username: 'admin',
-                password_hash: passwordHash,
+        // Asegurar usuario administrador
+        const [admin, created] = await db.Usuario.findOrCreate({
+            where: { username: 'admin' },
+            defaults: {
+                password_hash: await bcrypt.hash('admin123', 10),
                 email: 'admin@residencia.com',
                 rol: 'administrador',
                 activo: true
+            }
+        });
+
+        if (!created) {
+            await admin.update({
+                password_hash: await bcrypt.hash('admin123', 10),
+                activo: true,
+                rol: 'administrador'
             });
-            console.log('Usuario administrador por defecto creado: admin / admin123');
+            console.log('✓ Usuario administrador actualizado: admin / admin123');
+        } else {
+            console.log('✓ Usuario administrador creado: admin / admin123');
         }
 
         app.listen(PORT, () => {
@@ -59,5 +67,7 @@ db.sequelize.sync()
         });
     })
     .catch(err => {
+        const fs = require('fs');
+        fs.writeFileSync('server_error.log', 'Error al inicializar base de datos: ' + err.stack);
         console.error('Error al inicializar base de datos:', err);
     });

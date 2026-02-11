@@ -38,6 +38,7 @@
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
@@ -54,6 +55,11 @@
   "build": {
     "appId": "com.residencias.app",
     "productName": "Sistema de Gestión - Residencia",
+    "npmRebuild": false,
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**/*"
+    ],
     "directories": {
       "output": "dist-electron"
     },
@@ -64,8 +70,7 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "public/icon.ico"
+      "target": "nsis"
     },
     "nsis": {
       "oneClick": false,

@@ -14,10 +14,10 @@ export default function Dashboard() {
     const fetchStats = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/api/reportes/general', {
+            const res = await fetch('http://127.0.0.1:3001/api/reportes/general', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const resDeudas = await fetch('http://localhost:3001/api/pagos?estado=pendiente', {
+            const resDeudas = await fetch('http://127.0.0.1:3001/api/pagos?estado=pendiente', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -41,19 +41,7 @@ export default function Dashboard() {
         if (!window.confirm('¿Confirmar que el pago ha sido recibido?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/pagos/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ estado: 'completar' }) // Note: My backend PUT just updates the whole body, but I should check if it needs 'completado'
-            });
-
-            // Re-checking backend logic: server/routes/pagos.js line 88: await pago.update(req.body);
-            // So I should send { estado: 'completado' }
-
-            const res = await fetch(`http://localhost:3001/api/pagos/${id}`, {
+            const res = await fetch(`http://127.0.0.1:3001/api/pagos/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

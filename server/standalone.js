@@ -34,13 +34,41 @@ app.use('/api/backups', backupsRoutes);
 app.use('/api/reportes', reportesRoutes);
 
 // Inicializar DB y arrancar
-sequelize.sync({ alter: true })
-    .then(() => {
+const { Usuario } = require('./database/connection');
+const bcrypt = require('bcryptjs');
+
+sequelize.sync()
+    .then(async () => {
         console.log('✓ Base de datos sincronizada');
+
+        // Asegurar usuario administrador
+        const [admin, created] = await Usuario.findOrCreate({
+            where: { username: 'admin' },
+            defaults: {
+                password_hash: await bcrypt.hash('admin123', 10),
+                email: 'admin@residencia.com',
+                rol: 'administrador',
+                activo: true
+            }
+        });
+
+        if (!created) {
+            await admin.update({
+                password_hash: await bcrypt.hash('admin123', 10),
+                activo: true,
+                rol: 'administrador'
+            });
+            console.log('✓ Usuario administrador actualizado: admin / admin123');
+        } else {
+            console.log('✓ Usuario administrador creado: admin / admin123');
+        }
+
         app.listen(PORT, () => {
             console.log(`✓ Servidor API corriendo en http://localhost:${PORT}`);
         });
     })
     .catch(err => {
+        const fs = require('fs');
+        fs.appendFileSync('server_error.log', '\nError standalone: ' + err.stack);
         console.error('✗ Error al sincronizar DB:', err);
     });

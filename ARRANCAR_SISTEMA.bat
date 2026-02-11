@@ -8,13 +8,13 @@ echo 1. Iniciando servidor y base de datos...
 echo 2. Preparando interfaz web...
 echo.
 
-:: Ejecutar el servidor y vite en segundo plano usando concurrently
-:: Usamos commonjs para el servidor
-start /b cmd /c "npm run dev:vite"
-start /b cmd /c "node server/index.js"
+:: Ejecutar el servidor y vite en ventanas visibles para ver errores
+start "API SERVER" cmd /c "node server/index.js & pause"
+start "FRONTEND" cmd /c "npm run dev:vite & pause"
 
-echo Esperando a que el sistema este listo (5 segundos)...
-timeout /t 5 /nobreak > nul
+echo.
+echo Esperando a que el servidor arranque (10 segundos)...
+timeout /t 10 /nobreak > nul
 
 echo.
 echo 3. Abriendo el sistema en el navegador...

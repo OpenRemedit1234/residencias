@@ -28,7 +28,7 @@ export default function Apartamentos() {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/apartamentos`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/apartamentos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Error al cargar apartamentos');
@@ -48,7 +48,7 @@ export default function Apartamentos() {
     const handleEstadoChange = async (id: number, nuevoEstado: string) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/apartamentos/${id}/estado`, {
+            const response = await fetch(`http://127.0.0.1:3001/api/apartamentos/${id}/estado`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -66,8 +66,8 @@ export default function Apartamentos() {
     const handleSubmit = async (data: any) => {
         const token = localStorage.getItem('token');
         const url = editingApartamento
-            ? `http://localhost:3001/api/apartamentos/${editingApartamento.id}`
-            : 'http://localhost:3001/api/apartamentos';
+            ? `http://127.0.0.1:3001/api/apartamentos/${editingApartamento.id}`
+            : 'http://127.0.0.1:3001/api/apartamentos';
         const method = editingApartamento ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
