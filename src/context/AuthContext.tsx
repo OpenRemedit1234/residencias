@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 interface User {
     id: number;
@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
-                axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
             } catch (err) {
                 console.error("Error parsing stored user:", err);
                 localStorage.removeItem('token');
@@ -42,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (username: string, password: string) => {
         try {
-            const response = await axios.post('http://127.0.0.1:3001/api/auth/login', {
+            const response = await api.post('/api/auth/login', {
                 username,
                 password
             });
@@ -54,8 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             localStorage.setItem('token', newToken);
             localStorage.setItem('user', JSON.stringify(newUser));
-
-            axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
             throw error;
@@ -67,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        delete axios.defaults.headers.common['Authorization'];
     };
 
     return (

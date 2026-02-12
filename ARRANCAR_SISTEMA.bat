@@ -1,31 +1,41 @@
 @echo off
-title Lanzador de Sistema de Residencias
+title Lanzador de Sistema de Residencias - MODO ESCRITORIO
+:menu
+cls
 echo ==========================================
-echo   INICIANDO SISTEMA DE GESTION
-echo ==========================================
-echo.
-echo 1. Iniciando servidor y base de datos...
-echo 2. Preparando interfaz web...
-echo.
-
-:: Ejecutar el servidor y vite en ventanas visibles para ver errores
-start "API SERVER" cmd /c "node server/index.js & pause"
-start "FRONTEND" cmd /c "npm run dev:vite & pause"
-
-echo.
-echo Esperando a que el servidor arranque (10 segundos)...
-timeout /t 10 /nobreak > nul
-
-echo.
-echo 3. Abriendo el sistema en el navegador...
-start http://localhost:5173
-
-echo.
-echo ==========================================
-echo   SISTEMA ACTIVO
+echo   INICIANDO SISTEMA DE GESTION (MODO APP)
 echo ==========================================
 echo.
-echo NOTA: No cierres esta ventana negra. 
-echo Si la cierras, el sistema dejara de funcionar.
+echo 1. Iniciar Sistema Normal
+echo 2. FORZAR SELECCION DE BASE DE DATOS (Nube/Red)
+echo 3. Salir
 echo.
+set /p opt="Seleccione una opcion: "
+
+if "%opt%"=="1" goto start
+if "%opt%"=="2" goto reset
+if "%opt%"=="3" exit
+goto menu
+
+:reset
+set RESET_DB_CONFIG=true
+goto start
+
+:start
+echo.
+echo Preparando entorno...
+:: Ejecutar Vite en segundo plano
+start "FRONTEND" /min cmd /c "npm run dev:vite"
+
+echo Esperando a que el entorno este listo (5 segundos)...
+timeout /t 5 /nobreak > nul
+
+:: Ejecutar Electron
+echo Lanzando aplicacion de escritorio...
+npm run dev:electron
+
+echo.
+echo ==========================================
+echo   SISTEMA CERRADO
+echo ==========================================
 pause

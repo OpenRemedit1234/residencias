@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Residente, ApiResponse } from '../types/residentes';
 import ResidenteForm from '../components/residentes/ResidenteForm';
@@ -22,9 +22,8 @@ const Residentes: React.FC = () => {
     const fetchResidentes = async () => {
         try {
             setLoading(true);
-            const response = await axios.get<ApiResponse<Residente>>(
-                `http://127.0.0.1:3001/api/residentes?page=${page}&limit=10&search=${search}`,
-                { headers: { Authorization: `Bearer ${token}` } }
+            const response = await api.get<ApiResponse<Residente>>(
+                `/api/residentes?page=${page}&limit=10&search=${search}`
             );
             setResidentes(response.data.data);
             setTotalPages(response.data.pagination.totalPages);
@@ -51,9 +50,7 @@ const Residentes: React.FC = () => {
         if (!window.confirm('¿Estás seguro de eliminar este residente?')) return;
 
         try {
-            await axios.delete(`http://127.0.0.1:3001/api/residentes/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/api/residentes/${id}`);
             fetchResidentes();
         } catch (err) {
             alert('Error al eliminar residente');
@@ -76,14 +73,10 @@ const Residentes: React.FC = () => {
             setIsSubmitting(true);
             if (currentResidente?.id) {
                 // Update
-                await axios.put(`http://127.0.0.1:3001/api/residentes/${currentResidente.id}`, data, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.put(`/api/residentes/${currentResidente.id}`, data);
             } else {
                 // Create
-                await axios.post('http://127.0.0.1:3001/api/residentes', data, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post('/api/residentes', data);
             }
             setShowModal(false);
             fetchResidentes();

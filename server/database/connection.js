@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const fs = require('fs');
 
 // Intentar importar Electron solo si está disponible
 let app;
@@ -12,20 +13,57 @@ try {
 
 // Determinar ruta de la base de datos
 const isDev = process.env.NODE_ENV === 'development' || !app;
-const dbPath = isDev
-    ? path.join(__dirname, '../../database.sqlite')
-    : path.join(app.getPath('userData'), 'database.sqlite');
+
+// Soporte para ruta de base de datos personalizada vía global o config
+let dbPath = global.customDbPath;
+
+if (!dbPath) {
+    // Encontrar la carpeta de AppData/userData para el config.json
+    const configPath = (app && typeof app.getPath === 'function')
+        ? path.join(app.getPath('userData'), 'config.json')
+        : path.join(process.cwd(), 'config.json');
+
+    if (fs.existsSync(configPath)) {
+        try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            if (config.dbPath && fs.existsSync(config.dbPath)) {
+                dbPath = config.dbPath;
+            }
+        } catch (e) {
+            console.error('Error al cargar config.json remoto');
+        }
+    }
+}
+
+if (!dbPath) {
+    // Si llegamos aquí sin dbPath, es que no hay configuración de usuario.
+    // No creamos una por defecto para obligar a que el proceso principal (main.js)
+    // muestre primero el menú de selección de nube/red.
+    console.error('CRÍTICO: No se ha seleccionado ninguna base de datos.');
+    // En producción esto lanzará un error que capturaremos en main.js 
+    // para mostrar el diálogo de selección.
+}
 
 // Crear instancia de Sequelize con SQLite
 const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: dbPath,
     logging: isDev ? console.log : false,
+    // Ajustes para mejorar sincronización en nube
+    dialectOptions: {
+        mode: 2, // Read/Write
+    },
     define: {
         timestamps: true,
         underscored: true,
         freezeTableName: true
     }
+});
+
+// Forzar modo de diario compatible con OneDrive/Dropbox
+sequelize.addHook('afterConnect', async (connection) => {
+    await connection.run('PRAGMA journal_mode = DELETE;');
+    await connection.run('PRAGMA synchronous = NORMAL;');
 });
 
 // Importar modelos

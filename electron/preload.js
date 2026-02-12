@@ -4,5 +4,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
     getAppPath: () => ipcRenderer.invoke('get-app-path'),
     getVersion: () => ipcRenderer.invoke('get-version'),
-    getServerIp: () => ipcRenderer.invoke('get-server-ip')
+    getServerIp: () => ipcRenderer.invoke('get-server-ip'),
+    selectDatabase: () => ipcRenderer.invoke('select-database')
 });

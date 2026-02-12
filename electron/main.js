@@ -1,13 +1,10 @@
 const electron = require('electron');
-const { app, BrowserWindow, ipcMain } = electron;
-
-console.log('Electron API check:', {
-  hasApp: !!app,
-  appType: typeof app,
-  electronKeys: Object.keys(electron)
-});
+const { app, BrowserWindow, ipcMain, dialog } = electron;
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const express = require('express');
+const cors = require('cors');
 
 // Determinar ruta de logs fuera del ASAR
 const isDev = !app.isPackaged;
@@ -32,9 +29,6 @@ console.error = (...args) => {
   process.stderr.write(msg);
 };
 
-const express = require('express');
-const cors = require('cors');
-
 // Servidor Express embebido
 const serverApp = express();
 const PORT = 3001;
@@ -42,31 +36,7 @@ const PORT = 3001;
 serverApp.use(cors());
 serverApp.use(express.json());
 
-// Importar rutas del servidor
-const authRoutes = require('../server/routes/auth');
-const residentesRoutes = require('../server/routes/residentes');
-const habitacionesRoutes = require('../server/routes/habitaciones');
-const apartamentosRoutes = require('../server/routes/apartamentos');
-const reservasRoutes = require('../server/routes/reservas');
-const pagosRoutes = require('../server/routes/pagos');
-const configuracionRoutes = require('../server/routes/configuracion');
-const festivosRoutes = require('../server/routes/festivos');
-const backupsRoutes = require('../server/routes/backups');
-const reportesRoutes = require('../server/routes/reportes');
-
-// Rutas API
-serverApp.use('/api/auth', authRoutes);
-serverApp.use('/api/residentes', residentesRoutes);
-serverApp.use('/api/habitaciones', habitacionesRoutes);
-serverApp.use('/api/apartamentos', apartamentosRoutes);
-serverApp.use('/api/reservas', reservasRoutes);
-serverApp.use('/api/pagos', pagosRoutes);
-serverApp.use('/api/configuracion', configuracionRoutes);
-serverApp.use('/api/festivos', festivosRoutes);
-serverApp.use('/api/backups', backupsRoutes);
-serverApp.use('/api/reportes', reportesRoutes);
-
-const os = require('os');
+// Las rutas se cargarán dinámicamente dentro de startApp
 
 function getLocalIP() {
   const interfaces = os.networkInterfaces();
@@ -97,12 +67,12 @@ function createWindow() {
     height: 900,
     minWidth: 1200,
     minHeight: 700,
-    backgroundColor: '#0f172a', // Fondo oscuro inicial para evitar el destello blanco
+    backgroundColor: '#0f172a',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      webSecurity: false // Permitir carga de recursos locales
+      webSecurity: false
     },
     title: 'Sistema de Gestión - Residencia'
   });
@@ -112,50 +82,131 @@ function createWindow() {
   const isDevMode = !app.isPackaged || process.env.NODE_ENV === 'development';
 
   if (isDevMode) {
-    console.log('Modo Desarrollo: Cargando desde puerto 5173');
     mainWindow.loadURL('http://localhost:5173');
-    // mainWindow.webContents.openDevTools();
   } else {
-    // RUTA DEFINITIVA PARA PRODUCCIÓN
     const appPath = app.getAppPath();
     const indexPath = path.join(appPath, 'dist', 'index.html');
-
-    console.log('Modo Producción: Cargando archivo:', indexPath);
-
     if (fs.existsSync(indexPath)) {
-      mainWindow.loadFile(indexPath).catch(err => {
-        console.error('Error al cargar index.html:', err);
-      });
+      mainWindow.loadFile(indexPath);
     } else {
-      console.error('ERROR CRÍTICO: No se encontró index.html en:', indexPath);
-      // Failsafe: intentar ruta relativa al ejecutable
       const fallbackPath = path.join(__dirname, '..', 'dist', 'index.html');
       mainWindow.loadFile(fallbackPath);
     }
-
-    // DevTools desactivadas para la versión final
-    // mainWindow.webContents.openDevTools();
   }
-
-  // Detectar fallos de carga en el renderer
-  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error(`Fallo de carga: ${errorCode} - ${errorDescription}`);
-  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
-// Inicializar base de datos
-const db = require('../server/database/connection');
-const bcrypt = require('bcryptjs');
+async function ensureDatabasePath() {
+  const userDataConfig = path.join(app.getPath('userData'), 'config.json');
+  let dbPath = '';
 
-db.sequelize.sync({ alter: true })
-  .then(async () => {
+  const setupMarker = path.join(app.getPath('userData'), '.first_run_completed');
+
+  // 1. SOLO cargamos automáticamente si existe configuración Y no es un reset
+  if (fs.existsSync(userDataConfig) && fs.existsSync(setupMarker) && process.env.RESET_DB_CONFIG !== 'true') {
+    try {
+      const config = JSON.parse(fs.readFileSync(userDataConfig, 'utf8'));
+      if (config.dbPath && fs.existsSync(config.dbPath)) {
+        dbPath = config.dbPath;
+      }
+    } catch (e) {
+      console.error('Error al leer configuración de usuario:', e);
+    }
+  }
+
+  // 2. Si es la primera vez (no hay dbPath guardado), PREGUNTAMOS SÍ O SÍ
+  if (!dbPath) {
+    console.log('Iniciando diálogo de configuración inicial...');
+    const choice = dialog.showMessageBoxSync({
+      type: 'question',
+      buttons: ['Crear Nueva Base de Datos', 'Seleccionar Base de Datos Existente'],
+      defaultId: 1,
+      cancelId: -1,
+      title: 'Configuración de Datos - Residencia',
+      message: 'Base de Datos no configurada',
+      detail: 'Para trabajar en red o sincronizado, selecciona el archivo en tu carpeta compartida.\n\nPC 1: Elige "Crear" dentro de tu OneDrive.\nPC 2: Elige "Seleccionar" y busca el archivo que creó el PC 1.'
+    });
+
+    if (choice === 0) {
+      // OPCIÓN: CREAR
+      dbPath = dialog.showSaveDialogSync({
+        title: 'Guardar Nueva Base de Datos',
+        defaultPath: path.join(app.getPath('documents'), 'database.sqlite'),
+        filters: [{ name: 'SQLite Database', extensions: ['sqlite', 'db'] }]
+      });
+      if (dbPath && !fs.existsSync(dbPath)) {
+        try {
+          fs.writeFileSync(dbPath, ''); // Crear archivo vacío inicial físicamente
+        } catch (err) {
+          console.error('Error al crear archivo físico:', err);
+        }
+      }
+    } else if (choice === 1) {
+      // OPCIÓN: SELECCIONAR
+      const result = dialog.showOpenDialogSync({
+        title: 'Seleccionar Base de Datos Existente',
+        properties: ['openFile'],
+        filters: [{ name: 'SQLite Database', extensions: ['sqlite', 'db'] }]
+      });
+      if (result && result.length > 0) dbPath = result[0];
+    }
+
+    // Si cancela la primera vez, no podemos continuar
+    if (!dbPath) {
+      dialog.showErrorBox('Error', 'Se requiere una base de datos para iniciar el sistema.');
+      app.quit();
+      process.exit(1);
+    }
+
+    // Guardar la elección para que no vuelva a preguntar la próxima vez
+    fs.writeFileSync(userDataConfig, JSON.stringify({ dbPath }));
+
+    // Crear marcador de "ya configurado" para este equipo
+    const setupMarker = path.join(app.getPath('userData'), '.first_run_completed');
+    fs.writeFileSync(setupMarker, 'done');
+  }
+
+  global.customDbPath = dbPath;
+  console.log('Sistema cargado con base de datos en:', dbPath);
+}
+
+async function startApp() {
+  await ensureDatabasePath();
+
+  // IMPORTANTE: Los requiere de rutas deben ir AQUÍ DENTRO
+  // para que cojan la ruta de la base de datos correcta al inicializarse
+  const authRoutes = require('../server/routes/auth');
+  const residentesRoutes = require('../server/routes/residentes');
+  const habitacionesRoutes = require('../server/routes/habitaciones');
+  const apartamentosRoutes = require('../server/routes/apartamentos');
+  const reservasRoutes = require('../server/routes/reservas');
+  const pagosRoutes = require('../server/routes/pagos');
+  const configuracionRoutes = require('../server/routes/configuracion');
+  const festivosRoutes = require('../server/routes/festivos');
+  const backupsRoutes = require('../server/routes/backups');
+  const reportesRoutes = require('../server/routes/reportes');
+
+  serverApp.use('/api/auth', authRoutes);
+  serverApp.use('/api/residentes', residentesRoutes);
+  serverApp.use('/api/habitaciones', habitacionesRoutes);
+  serverApp.use('/api/apartamentos', apartamentosRoutes);
+  serverApp.use('/api/reservas', reservasRoutes);
+  serverApp.use('/api/pagos', pagosRoutes);
+  serverApp.use('/api/configuracion', configuracionRoutes);
+  serverApp.use('/api/festivos', festivosRoutes);
+  serverApp.use('/api/backups', backupsRoutes);
+  serverApp.use('/api/reportes', reportesRoutes);
+
+  const db = require('../server/database/connection');
+  const bcrypt = require('bcryptjs');
+
+  try {
+    await db.sequelize.sync({ alter: true });
     console.log('Base de datos SQLite inicializada');
 
-    // Asegurar usuario administrador
     const [admin, created] = await db.Usuario.findOrCreate({
       where: { username: 'admin' },
       defaults: {
@@ -172,76 +223,62 @@ db.sequelize.sync({ alter: true })
         activo: true,
         rol: 'administrador'
       });
-      console.log('Usuario administrador actualizado: admin / admin123');
-    } else {
-      console.log('Usuario administrador creado: admin / admin123');
     }
-  })
-  .catch(err => {
-    const fs = require('fs');
+
+    createWindow();
+  } catch (err) {
     fs.appendFileSync('server_error.log', '\nError main.js: ' + err.stack);
     console.error('Error al inicializar base de datos:', err);
-  });
-
-app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
-});
-
-async function performBackup() {
-  try {
-    const userDataPath = app.getPath('userData');
-    const backupsBaseDir = path.join(userDataPath, 'backups');
-
-    // Carpeta con fecha y hora
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupDir = path.join(backupsBaseDir, timestamp);
-
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
-    }
-
-    // 1. Backup de Base de Datos
-    const sourceDb = path.join(userDataPath, 'database.sqlite');
-    if (fs.existsSync(sourceDb)) {
-      fs.copyFileSync(sourceDb, path.join(backupDir, 'database.sqlite'));
-    }
-
-    // 2. Backup de otras configuraciones (si existen)
-    // Ejemplo: archivos JSON de config o carpetas de recursos del usuario
-    console.log(`Backup automático completado en: ${backupDir}`);
-    return backupDir;
-  } catch (err) {
-    console.error('Error en backup automático:', err);
+    dialog.showErrorBox('Error de Base de Datos', 'No se pudo conectar con el archivo seleccionado.');
+    app.quit();
   }
 }
 
+app.whenReady().then(startApp);
+
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+  if (process.platform !== 'darwin') app.quit();
+});
+
+ipcMain.handle('get-app-path', () => app.getPath('userData'));
+ipcMain.handle('get-version', () => app.getVersion());
+ipcMain.handle('get-server-ip', () => LOCAL_IP);
+
+async function showDatabaseSelection() {
+  const choice = dialog.showMessageBoxSync({
+    type: 'question',
+    buttons: ['Crear Nueva Base de Datos', 'Seleccionar Base de Datos Existente'],
+    defaultId: 1,
+    title: 'Configuración de Datos - Residencia',
+    message: '¿Cómo desea configurar la base de datos?',
+    detail: 'Seleccione un archivo en su carpeta sincronizada (OneDrive/Dropbox) para trabajar en red.'
+  });
+
+  let dbPath = '';
+  if (choice === 0) {
+    dbPath = dialog.showSaveDialogSync({
+      title: 'Guardar Nueva Base de Datos',
+      defaultPath: path.join(app.getPath('documents'), 'database.sqlite'),
+      filters: [{ name: 'SQLite Database', extensions: ['sqlite', 'db'] }]
+    });
+  } else {
+    const result = dialog.showOpenDialogSync({
+      title: 'Seleccionar Base de Datos Existente',
+      properties: ['openFile'],
+      filters: [{ name: 'SQLite Database', extensions: ['sqlite', 'db'] }]
+    });
+    if (result && result.length > 0) dbPath = result[0];
   }
-});
 
-app.on('before-quit', async (event) => {
-  // Realizar backup antes de cerrar
-  console.log('Iniciando backup antes de cerrar...');
-  await performBackup();
-});
+  if (dbPath) {
+    fs.writeFileSync(configFile, JSON.stringify({ dbPath }));
+    global.customDbPath = dbPath;
+    // Reiniciar conexión de base de datos o requerir reinicio de app
+    return dbPath;
+  }
+  return null;
+}
 
-// IPC Handlers para comunicación con el renderer
-ipcMain.handle('get-app-path', () => {
-  return app.getPath('userData');
-});
-
-ipcMain.handle('get-version', () => {
-  return app.getVersion();
-});
-
-ipcMain.handle('get-server-ip', () => {
-  return LOCAL_IP;
+ipcMain.handle('select-database', async () => {
+  return await showDatabaseSelection();
 });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import api from '../services/api';
 
 export default function Dashboard() {
     const [stats, setStats] = useState({
@@ -13,19 +14,12 @@ export default function Dashboard() {
 
     const fetchStats = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('http://127.0.0.1:3001/api/reportes/general', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const resDeudas = await fetch('http://127.0.0.1:3001/api/pagos?estado=pendiente', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [res, resDeudas] = await Promise.all([
+                api.get('/api/reportes/general'),
+                api.get('/api/pagos?estado=pendiente')
+            ]);
 
-            if (res.ok && resDeudas.ok) {
-                const data = await res.json();
-                const deudas = await resDeudas.json();
-                setStats({ ...data, deudas });
-            }
+            setStats({ ...res.data, deudas: resDeudas.data });
         } catch (error) {
             console.error('Error cargando stats dashboard');
         } finally {
@@ -40,19 +34,8 @@ export default function Dashboard() {
     const handleCompletarPago = async (id: number) => {
         if (!window.confirm('¿Confirmar que el pago ha sido recibido?')) return;
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`http://127.0.0.1:3001/api/pagos/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ estado: 'completado' })
-            });
-
-            if (res.ok) {
-                fetchStats();
-            }
+            await api.put(`/api/pagos/${id}`, { estado: 'completado' });
+            fetchStats();
         } catch (err) {
             alert('Error al actualizar pago');
         }
