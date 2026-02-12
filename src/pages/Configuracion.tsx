@@ -3,6 +3,7 @@ import ConfiguracionEmails from '../components/configuracion/ConfiguracionEmails
 import AdminUsuarios from '../components/configuracion/AdminUsuarios';
 import AdminBackups from '../components/configuracion/AdminBackups';
 import AdminEmpresa from '../components/configuracion/AdminEmpresa';
+import ConnectivityInfo from '../components/configuracion/ConnectivityInfo';
 
 export default function Configuracion() {
     const [activeTab, setActiveTab] = useState('empresa');
@@ -11,7 +12,8 @@ export default function Configuracion() {
         { id: 'empresa', label: 'Empresa', component: <AdminEmpresa /> },
         { id: 'usuarios', label: 'Usuarios', component: <AdminUsuarios /> },
         { id: 'emails', label: 'Emails', component: <ConfiguracionEmails /> },
-        { id: 'backups', label: 'Backups', component: <AdminBackups /> }
+        { id: 'backups', label: 'Backups', component: <AdminBackups /> },
+        { id: 'conectividad', label: 'Conectividad LAN', component: <ConnectivityInfo /> }
     ];
 
     return (

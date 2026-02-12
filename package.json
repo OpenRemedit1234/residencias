@@ -11,6 +11,7 @@
     "server:standalone": "node server/standalone.js",
     "build": "tsc && vite build",
     "build:electron": "npm run build && electron-builder",
+    "rebuild:deps": "electron-rebuild -f -w sqlite3",
     "preview": "vite preview",
     "server": "node server/index.js"
   },
@@ -76,7 +77,9 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "allowElevation": true,
+      "perMachine": true
     }
   }
 }

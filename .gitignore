@@ -43,3 +43,6 @@ uploads/
 
 # Electron
 out/
+
+# Temporary logs
+*.txt

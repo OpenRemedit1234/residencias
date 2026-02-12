@@ -4,10 +4,25 @@ const fs = require('fs');
 const path = require('path');
 const { authMiddleware } = require('./auth');
 
-const BACKUP_DIR = path.join(__dirname, '../backups');
-const DB_PATH = path.join(__dirname, '../database.sqlite'); // Asumiendo ubicación
+// Intentar importar Electron para obtener rutas de usuario
+let app;
+try {
+    app = require('electron').app;
+} catch (e) {
+    app = null;
+}
 
-// Asegurar que existe dir
+const isDev = process.env.NODE_ENV === 'development' || !app;
+
+const BACKUP_DIR = isDev
+    ? path.join(__dirname, '../backups')
+    : path.join(app.getPath('userData'), 'backups');
+
+const DB_PATH = isDev
+    ? path.join(__dirname, '../../database.sqlite')
+    : path.join(app.getPath('userData'), 'database.sqlite');
+
+// Asegurar que existe dir (fuera del ASAR)
 if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }

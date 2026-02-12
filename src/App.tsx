@@ -1,6 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
+import Setup from './pages/Setup';
 import Dashboard from './pages/Dashboard';
 import Residentes from './pages/Residentes';
 import Layout from './components/layout/Layout';
@@ -19,9 +20,10 @@ function App() {
         <AuthProvider>
             <Router>
                 <Routes>
+                    <Route path="/setup" element={<Setup />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/" element={<Layout />}>
-                        <Route index element={<Navigate to="/dashboard" replace />} />
+                        <Route index element={<Navigate to="/setup" replace />} />
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="residentes" element={<Residentes />} />
                         <Route path="habitaciones" element={<Habitaciones />} />
