@@ -6,7 +6,6 @@ yarn-error.log*
 
 # Build outputs
 dist/
-dist-electron/
 build/
 
 # Database
@@ -46,3 +45,6 @@ out/
 
 # Temporary logs
 *.txt
+
+dist-electron/win-unpacked
+dist-electron/*-unpacked

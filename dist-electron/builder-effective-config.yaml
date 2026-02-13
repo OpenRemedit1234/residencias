@@ -1,0 +1,25 @@
+directories:
+  output: dist-electron
+  buildResources: build
+appId: com.residencias.app
+productName: Sistema de Gestión - Residencia
+npmRebuild: false
+asar: true
+asarUnpack:
+  - '**/node_modules/sqlite3/**/*'
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - server/**/*
+      - package.json
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  allowElevation: true
+  perMachine: true
+electronVersion: 28.3.3
